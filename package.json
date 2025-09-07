@@ -1,0 +1,144 @@
+{
+  "name": "jarvis-gpt",
+  "version": "1.0.0",
+  "description": "Electron.js ChatGPT-style desktop application",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "concurrently \"npm run build:watch\" \"wait-on dist/index.html && electron .\"",
+    "build": "webpack --mode production",
+    "build:watch": "webpack --mode development --watch",
+    "build:analyze": "cross-env ANALYZE=true npm run build",
+    "dev": "webpack serve --mode development",
+    "electron": "electron .",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "pack": "electron-builder",
+    "dist": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "chatgpt",
+    "openai",
+    "supabase",
+    "desktop"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@babel/preset-react": "^7.22.0",
+    "autoprefixer": "^10.4.14",
+    "babel-loader": "^9.1.0",
+    "buffer": "^6.0.3",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "crypto-browserify": "^3.12.0",
+    "css-loader": "^6.8.0",
+    "css-minimizer-webpack-plugin": "^5.0.1",
+    "electron": "^37.2.6",
+    "electron-builder": "^24.4.0",
+    "html-webpack-plugin": "^5.5.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "postcss": "^8.4.24",
+    "postcss-loader": "^7.3.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "style-loader": "^3.3.0",
+    "tailwindcss": "^3.3.0",
+    "terser-webpack-plugin": "^5.3.14",
+    "url": "^0.11.0",
+    "util": "^0.12.5",
+    "wait-on": "^7.0.0",
+    "webpack": "^5.88.0",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^5.2.2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
+    "dotenv": "^16.3.1",
+    "electron-updater": "^6.1.4",
+    "global": "^4.4.0",
+    "katex": "^0.16.22",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-katex": "^3.1.0",
+    "react-markdown": "^8.0.7",
+    "react-syntax-highlighter": "^15.5.0",
+    "rehype-katex": "^6.0.3",
+    "remark-gfm": "^3.0.1",
+    "remark-math": "^5.1.1",
+    "uuid": "^9.0.0"
+  },
+  "build": {
+    "appId": "com.yourname.jarvis-gpt",
+    "productName": "Jarvis GPT",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "assets/**/*"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "your-username",
+      "repo": "jarvis-gpt",
+      "private": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "hardenedRuntime": true,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
