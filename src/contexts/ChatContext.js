@@ -190,10 +190,14 @@ export const ChatProvider = ({ children }) => {
     localStorage.setItem('jarvis-chats', JSON.stringify(chatsToSave));
   }, [chats, currentChatId, isConnected, deleteFromSupabase]);
 
-  const sendMessage = useCallback(async (content) => {
-    if (!content.trim()) return;
+  const sendMessage = useCallback(async (content, aiContent = null) => {
+    const displayContent = content;
+    const processContent = aiContent || content;
+    
+    if (!displayContent.trim()) return;
 
-    console.log('[DEBUG] Sending message:', content);
+    console.log('[DEBUG] Sending message:', displayContent);
+    console.log('[DEBUG] AI processing content:', processContent);
     console.log('[DEBUG] Current chat ID:', currentChatId);
     console.log('[DEBUG] API URL:', process.env.REACT_APP_AI_API_URL);
 
@@ -207,7 +211,7 @@ export const ChatProvider = ({ children }) => {
 
     const userMessage = {
       role: 'user',
-      content: content.trim(),
+      content: displayContent.trim(),
       timestamp: new Date().toISOString()
     };
 
@@ -237,8 +241,17 @@ export const ChatProvider = ({ children }) => {
       const currentChatWithUser = updatedChatsWithUser.find(chat => chat.id === chatId);
       const allMessages = currentChatWithUser ? currentChatWithUser.messages : [userMessage];
       
-      console.log('[DEBUG] Calling AI service with messages:', allMessages);
-      const response = await aiService.sendMessage(allMessages);
+      // If we have different content for AI processing, use that for the last message
+      const messagesForAI = aiContent ? [
+        ...allMessages.slice(0, -1),
+        {
+          ...allMessages[allMessages.length - 1],
+          content: processContent.trim()
+        }
+      ] : allMessages;
+      
+      console.log('[DEBUG] Calling AI service with messages:', messagesForAI);
+      const response = await aiService.sendMessage(messagesForAI);
       console.log('[DEBUG] AI response received:', response);
       
       // Ensure loading is stopped before updating chats

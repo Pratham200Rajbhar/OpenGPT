@@ -3,7 +3,10 @@ const aiService = {
   config: {
     maxContextMessages: 10, // Maximum number of previous messages to include
     contextFormat: 'detailed', // 'simple', 'detailed', or 'summary'
-    enableMemory: true // Toggle conversation memory on/off
+    enableMemory: true, // Toggle conversation memory on/off
+    enableRAG: false, // Toggle RAG (Retrieval Augmented Generation) on/off - disabled as service removed
+    maxRelevantChunks: 5, // Maximum number of relevant chunks to include
+    similarityThreshold: 0.7 // Minimum similarity score for including chunks
   },
   /**
    * Send messages to the AI API and get a response
@@ -29,21 +32,22 @@ const aiService = {
         throw new Error('No message content to send');
       }
 
-      // Try sending with conversation context first
+      // Get relevant document chunks using RAG
+      const relevantChunks = await this.getRelevantDocumentChunks(lastUserMessage.content);
+      
+      // Build the enhanced context with document chunks
       let requestBody;
-      if (conversationContext && conversationContext.trim()) {
-        // Include conversation history in the message
-        requestBody = {
-          message: `Context: ${conversationContext}\n\nCurrent message: ${lastUserMessage.content}`
-        };
-      } else {
-        // Fallback to just the current message
-        requestBody = {
-          message: lastUserMessage.content
-        };
-      }
+      const fullContext = this.buildEnhancedContext(
+        conversationContext,
+        relevantChunks,
+        lastUserMessage.content
+      );
 
-      console.log('[aiService] Request body:', requestBody);
+      requestBody = {
+        message: fullContext
+      };
+
+      console.log('[aiService] Request body with RAG:', requestBody);
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -260,6 +264,84 @@ const aiService = {
       .join(' ');
     
     return cleanContent || 'New Chat';
+  },
+
+  /**
+   * Get relevant document chunks using RAG
+   * @param {String} query - User query
+   * @returns {Array} Array of relevant document chunks
+   */
+  async getRelevantDocumentChunks(query) {
+    if (!this.config.enableRAG) {
+      return [];
+    }
+
+    try {
+      // RAG functionality disabled - embedding service removed
+      console.log('[aiService] RAG is disabled - no document chunks available');
+      return [];
+    } catch (error) {
+      console.error('[aiService] Failed to get relevant chunks:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Build enhanced context with conversation history and document chunks
+   * @param {String} conversationContext - Conversation history
+   * @param {Array} relevantChunks - Relevant document chunks
+   * @param {String} currentMessage - Current user message
+   * @returns {String} Enhanced context
+   */
+  buildEnhancedContext(conversationContext, relevantChunks, currentMessage) {
+    let contextParts = [];
+
+    // Add document context if available
+    if (relevantChunks && relevantChunks.length > 0) {
+      const documentContext = this.buildDocumentContext(relevantChunks);
+      contextParts.push(documentContext);
+    }
+
+    // Add conversation context
+    if (conversationContext && conversationContext.trim()) {
+      contextParts.push(`Previous conversation:\n${conversationContext}`);
+    }
+
+    // Add current message
+    contextParts.push(`Current question: ${currentMessage}`);
+
+    // Add instruction for using document context
+    if (relevantChunks && relevantChunks.length > 0) {
+      contextParts.push(
+        `Instructions: Please answer the question based on the provided document excerpts and conversation context. ` +
+        `If the document excerpts contain relevant information, use them to provide a comprehensive answer. ` +
+        `If the question cannot be answered from the provided context, please say so and provide a general response.`
+      );
+    }
+
+    return contextParts.join('\n\n');
+  },
+
+  /**
+   * Build document context from relevant chunks
+   * @param {Array} relevantChunks - Array of relevant document chunks
+   * @returns {String} Formatted document context
+   */
+  buildDocumentContext(relevantChunks) {
+    if (!relevantChunks || relevantChunks.length === 0) {
+      return '';
+    }
+
+    const contextLines = ['Relevant document excerpts:'];
+    
+    relevantChunks.forEach((chunk, index) => {
+      const similarity = (chunk.similarity * 100).toFixed(1);
+      contextLines.push(
+        `\n--- Document: ${chunk.fileName} (Relevance: ${similarity}%) ---\n${chunk.text}`
+      );
+    });
+
+    return contextLines.join('\n');
   },
 
   /**

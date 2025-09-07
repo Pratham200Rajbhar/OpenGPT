@@ -44,7 +44,9 @@ module.exports = {
       "https": require.resolve("https-browserify"),
       "os": require.resolve("os-browserify/browser"),
       "url": require.resolve("url"),
-      "process": require.resolve("process/browser.js")
+      "process": require.resolve("process/browser.js"),
+      "zlib": false,
+      "querystring": require.resolve("querystring-es3")
     }
   },
 
